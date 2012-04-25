@@ -1,0 +1,101 @@
+#!/bin/sh
+#
+# suppose_its 1.2 
+# for Linux 18/10/2010 http://irekjozwiak.com
+# modified for FreeBSD on 25/04/2012 http://humane-software.com 
+#
+# Copyright 2010-2012 by Irek Jozwiak. All rights reserved.
+# Copyright 2012 by Humane Software. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are
+# permitted provided that the following conditions are met:
+#
+#    1. Redistributions of source code must retain the above copyright notice, this list of
+#       conditions and the following disclaimer.
+#
+#    2. Redistributions in binary form must reproduce the above copyright notice, this list
+#       of conditions and the following disclaimer in the documentation and/or other materials
+#       provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY IREK JOZWIAK & HUMANE SOFTWARE``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL IREK JOZWIAK, HUMANE SOFTWARE OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are those of the
+# authors and should not be interpreted as representing official policies, either expressed
+# or implied, of Irek Jozwiak or Humane Software.
+
+VERSION=1.2
+INTERPOSER_SO_PATH=/tmp/suppose_its_$VERSION.so
+INTERPOSER_C_PATH=/tmp/suppose_its_$VERSION.c
+
+if uname | grep BSD >> /dev/null
+then
+  LINKER_FLAG="";
+else
+  LINKER_FLAG="-ldl";
+fi
+
+[ "$#" -lt 2 ] && echo "Usage: echo <date> > <filename> && $0 <filename> <program> [arg1] [arg2] ..." && exit -1
+
+build_interposer() {
+ echo "Building gettimeofday(2) interposer";
+ cat > $INTERPOSER_C_PATH << '__EOF__'
+#define _XOPEN_SOURCE
+#define _GNU_SOURCE
+
+#include <dlfcn.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
+
+int is_set(char *str)
+{
+ return (str != NULL) && (str[0] != 0);
+}
+
+int parse_timestamp(char *timestamp_str, struct timeval *tp) {
+  (*tp).tv_sec = atoi(timestamp_str);
+  (*tp).tv_usec = 0;
+  return 0;
+}
+
+FILE* ts_open() {
+  return fopen(getenv("DATE_FILE"),"r");
+}
+
+int gettimeofday(struct timeval *tp, struct timezone *tzp) {
+  char timestamp_str[11];
+  FILE *file = ts_open();
+  if (!file)
+     return (((int (*)()) dlsym(RTLD_NEXT, "gettimeofday"))(tp,tzp));
+  fgets(timestamp_str, 11, file);
+  return parse_timestamp(timestamp_str, tp);
+}
+
+__EOF__
+ cc -fPIC -shared -o $INTERPOSER_SO_PATH $INTERPOSER_C_PATH $LINKER_FLAG;
+ chmod 777 $INTERPOSER_SO_PATH;
+}
+
+[ -f $INTERPOSER_SO_PATH ] || build_interposer
+
+LAUNCH_CMD=""
+i=1
+for a in "$@"; do
+    if [ $i -ne 1 ] ; then
+	LAUNCH_CMD=$LAUNCH_CMD" "$a;
+    else
+	i=0;
+    fi;
+done
+
+(export LD_PRELOAD=$INTERPOSER_SO_PATH && export DATE_FILE=$1 && eval $LAUNCH_CMD)
