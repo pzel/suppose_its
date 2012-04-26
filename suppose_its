@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# suppose_its 1.2 
+# suppose_its 1.3
 # for Linux 18/10/2010 http://irekjozwiak.com
-# modified for FreeBSD on 25/04/2012 http://humane-software.com 
-#
+# modified for FreeBSD on 25/04/2012 http://humane-software.com
+# modified for Mac OS >= 10.5 on 26/04/2012 http://humane-software.com
 # Copyright 2010-2012 by Irek Jozwiak. All rights reserved.
 # Copyright 2012 by Humane Software. All rights reserved.
 #
@@ -31,22 +31,35 @@
 # authors and should not be interpreted as representing official policies, either expressed
 # or implied, of Irek Jozwiak or Humane Software.
 
-VERSION=1.2
+# All software brands mentioned within are property of their respective owners.
+
+VERSION=1.3
+ARCH=`uname`
 INTERPOSER_SO_PATH=/tmp/suppose_its_$VERSION.so
 INTERPOSER_C_PATH=/tmp/suppose_its_$VERSION.c
+GETTIMEOFDAY_SIGNATURE="int gettimeofday(struct timeval *tp, struct timezone *tzp) "
+ENVIRONMENT="export LD_PRELOAD=$INTERPOSER_SO_PATH && export DATE_FILE=$1"
 
-if uname | grep BSD >> /dev/null
+if echo $ARCH | grep 'BSD' >> /dev/null
 then
-  LINKER_FLAG="";
+    LINKER_FLAG="-fPIC -shared";
+
+elif echo $ARCH | grep 'Darwin' >> /dev/null
+then
+    LINKER_FLAG="-dynamiclib"
+    INTERPOSER_SO_PATH=/tmp/suppose_its_$VERSION.dynlib
+    GETTIMEOFDAY_SIGNATURE="int gettimeofday(struct timeval *restrict tp, void *restrict tzp)"
+    ENVIRONMENT="export DYLD_FORCE_FLAT_NAMESPACE=1 && export DYLD_INSERT_LIBRARIES=$INTERPOSER_SO_PATH && export DATE_FILE=$1"
+
 else
-  LINKER_FLAG="-ldl";
+    LINKER_FLAG="-fPIC -shared -ldl";
 fi
 
 [ "$#" -lt 2 ] && echo "Usage: echo <date> > <filename> && $0 <filename> <program> [arg1] [arg2] ..." && exit -1
 
 build_interposer() {
  echo "Building gettimeofday(2) interposer";
- cat > $INTERPOSER_C_PATH << '__EOF__'
+ cat > $INTERPOSER_C_PATH << __EOF__
 #define _XOPEN_SOURCE
 #define _GNU_SOURCE
 
@@ -72,7 +85,7 @@ FILE* ts_open() {
   return fopen(getenv("DATE_FILE"),"r");
 }
 
-int gettimeofday(struct timeval *tp, struct timezone *tzp) {
+$GETTIMEOFDAY_SIGNATURE {
   char timestamp_str[11];
   FILE *file = ts_open();
   if (!file)
@@ -82,20 +95,22 @@ int gettimeofday(struct timeval *tp, struct timezone *tzp) {
 }
 
 __EOF__
- cc -fPIC -shared -o $INTERPOSER_SO_PATH $INTERPOSER_C_PATH $LINKER_FLAG;
+
+ cc -o $INTERPOSER_SO_PATH $INTERPOSER_C_PATH $LINKER_FLAG;
  chmod 777 $INTERPOSER_SO_PATH;
 }
 
-[ -f $INTERPOSER_SO_PATH ] || build_interposer
+#[ -f $INTERPOSER_SO_PATH ] ||
+build_interposer
 
 LAUNCH_CMD=""
 i=1
 for a in "$@"; do
     if [ $i -ne 1 ] ; then
-	LAUNCH_CMD=$LAUNCH_CMD" "$a;
+        LAUNCH_CMD=$LAUNCH_CMD" "$a;
     else
-	i=0;
+        i=0;
     fi;
 done
 
-(export LD_PRELOAD=$INTERPOSER_SO_PATH && export DATE_FILE=$1 && eval $LAUNCH_CMD)
+(eval $ENVIRONMENT && eval $LAUNCH_CMD)
