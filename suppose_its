@@ -100,8 +100,7 @@ __EOF__
  chmod 777 $INTERPOSER_SO_PATH;
 }
 
-#[ -f $INTERPOSER_SO_PATH ] ||
-build_interposer
+[ -f $INTERPOSER_SO_PATH ] || build_interposer
 
 LAUNCH_CMD=""
 i=1
