@@ -1,9 +1,9 @@
 # suppose_its 1.3
 
-## Copyright 2010-2012 by Irek Jozwiak. All rights reserved.
-## Copyright 2012 by Humane Software. All rights reserved.
+##### Copyright 2010-2012 by Irek Jozwiak. All rights reserved.
+##### Copyright 2012 by Humane Software. All rights reserved.
 
-# LICENCE
+## LICENCE
 
 Redistribution and use in source and binary forms, with or without modification, are
 permitted provided that the following conditions are met:
