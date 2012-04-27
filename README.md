@@ -10,7 +10,7 @@ Licenced under the BSD licence (see below).
 What does it do?
 -------------------
 
-`suppose_its` uses a technique called **library interposing** to override calls to the `gettimeofday(2)` system function. It can be used to trick programs into thinking the system time is different then the actual time. The canonical use case is acceptance-testing date-related code. 
+`suppose_its` uses a technique called **library interposing** to override calls to the `gettimeofday(2)` system function. It can be used to trick programs into thinking the system time is different from the actual time. The canonical use case is acceptance-testing date-related code. 
 
 It runs on Linux (debian, ubuntu), FreeBSD, and OS X (Leopard and later versions), provided the system has a C compiler and a POSIX-compliant shell (sh, ksh, dash, bash) available at `/bin/sh`.
 
