@@ -26,7 +26,7 @@ Basic Use
         
         $ echo -n "1234567890" > test_timestamp.txt
 
-2. Pass the program string as the third argument to `suppose_its`:
+2. Pass the timestamp location and program command as arguments to `suppose_its`:
         
         $ suppose_its ./test_timestamp 'ghc -e "System.Time.getClockTime"
         Sat Feb 14 00:31:30 CET 2009
@@ -86,8 +86,6 @@ Bugs and Limitations
      
         $ ./suppose_its ./test_timestamp.txt 'csi -e "(use posix) (display (seconds->string (current-seconds))) (newline)"'
         Fri Apr 27 19:02:06 2012
-
-
 
 
 Wanted:
