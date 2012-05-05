@@ -20,7 +20,7 @@ It will not work with statically compiled programs.
 Basic Use
 ---------------
 
- Assuming you have placed the script in your $PATH and it is executable, you can use it as follows:
+ Assuming you have placed the `suppose_its` script in your $PATH and it is executable, you can use it as follows:
 
 1. Place a [POSIX timestamp](https://en.wikipedia.org/wiki/Unix_time) in a file of your choosing:
         
@@ -28,10 +28,10 @@ Basic Use
 
 2. Pass the timestamp location and program command as arguments to `suppose_its`:
         
-        $ suppose_its ./test_timestamp 'ghc -e "System.Time.getClockTime"
+        $ suppose_its ./test_timestamp 'ghc -e "System.Time.getClockTime"'
         Sat Feb 14 00:31:30 CET 2009
         
-        $ suppose_its ./test_timestamp.txt '/usr/bin/ruby -e "puts Time.now.to_i"
+        $ suppose_its ./test_timestamp.txt '/usr/bin/ruby -e "puts Time.now.to_i"'
         1234567890
         
         $ rm ./test_timestamp.txt
