@@ -5,6 +5,9 @@ test:  build
 clean:
 	@echo "cleaning"
 	@rm -f /tmp/suppose_its*
+	@rm -f *beam
+	@rm -f erl_crash.dump
+	@rm -f test_tstamp
 
 build: clean
 	@echo "building"

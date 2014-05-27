@@ -23,6 +23,18 @@ describe "suppose_its" do
       must_be_within_delta @fake_time, 0
   end
 
+  it "works with the erlang vm" do
+    if `which erl`.length > 0
+      given_erlang_testfile
+      @fake_time = 111111111
+      given_timestamp_file @fake_time
+      (run_with default_timestamp,erlang_date_command).to_i.
+        must_be_within_delta @fake_time, 0
+    else
+      skip "erlang not available"
+    end
+  end
+
 end
 
 def delta
@@ -37,6 +49,10 @@ def given_empty_timestamp_file
   system "echo '' > #{default_timestamp}"
 end
 
+def given_erlang_testfile
+  `erlc ./erl_test.erl`
+end
+
 def given_no_timestamp_file
   system "rm -f #{default_timestamp}"
 end
@@ -47,6 +63,10 @@ end
 
 def python_date_command
   'python -c "import time;  print int(time.time())"'
+end
+
+def erlang_date_command
+  'erl -noshell -s erl_test run'
 end
 
 def run_with filename, args
