@@ -34,7 +34,7 @@ def default_timestamp
 end
 
 def given_empty_timestamp_file
-  system "echo -n '' > #{default_timestamp}"
+  system "echo '' > #{default_timestamp}"
 end
 
 def given_no_timestamp_file
@@ -42,7 +42,7 @@ def given_no_timestamp_file
 end
 
 def given_timestamp_file ts
-  system "echo -n #{ts.to_s} > #{default_timestamp}"
+  system "echo #{ts.to_s} > #{default_timestamp}"
 end
 
 def python_date_command
